@@ -19,10 +19,8 @@ public class UserMeal {
         return dateTime;
     }
 
-    public String getDescription() {
-        return description;
+    public String getDescription() { return description;
     }
-
     public int getCalories() {
         return calories;
     }
