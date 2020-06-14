@@ -3,52 +3,71 @@ package ru.javawebinar.topjava.repository.inmemory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import ru.javawebinar.topjava.model.AbstractNamedEntity;
+import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Repository
 public class InMemoryUserRepository implements UserRepository {
+
     private Map<Integer,User>users = new ConcurrentHashMap<>();
     private static final AtomicInteger COUNTER = new AtomicInteger();
     private static final Logger log = LoggerFactory.getLogger(InMemoryUserRepository.class);
+    //TODO: testing list. Delete prior final commit
+    private static List<User>testList = new ArrayList<User>(){{
+        add(new User(null,"Petr","petya123@users.com","qwerty", Role.USER));
+        add(new User(null,"Vasya","vasya@users.com","qwerty", Role.USER));
+        add(new User(null,"Jenya","jenya@users.com","qwerty", Role.USER));
+        add(new User(null,"Misha","misha@users.com","qwerty", Role.USER));
+        add(new User(null,"Misha","amisha89@users.com","qwerty", Role.USER));
+        add(new User(null,"Admin","admin@users.com","qwerty", Role.ADMIN));
+    }};
+
+    public InMemoryUserRepository() {
+        testList.forEach(this::save);
+    }
 
     @Override
     public boolean delete(int id) {
         log.info("delete {}", id);
-        return true;
+        return users.remove(id)!=null;
     }
 
     @Override
     public User save(User user) {
         log.info("save {}", user);
         if(user.isNew()) {
-            users.put(COUNTER.incrementAndGet(),user);
+            user.setId(COUNTER.incrementAndGet());
+            users.put(user.getId(),user);
+            return user;
         }
-        users.computeIfPresent(user.getId(),(userId,someUser)->user);
+        users.computeIfPresent(user.getId(),(id,oldUser)->user);
         return user;
     }
 
     @Override
     public User get(int id) {
         log.info("get {}", id);
-        return null;
+        return users.get(id);
     }
 
     @Override
     public List<User> getAll() {
         log.info("getAll");
-        return Collections.emptyList();
+        return users.values().stream().sorted(Comparator.comparing((Function<User, String>) AbstractNamedEntity::getName)
+                .thenComparing(User::getEmail)).collect(Collectors.toList());
     }
 
     @Override
     public User getByEmail(String email) {
         log.info("getByEmail {}", email);
-        return null;
+        return users.values().stream().filter(user ->user.getEmail().equals(email)).findFirst().orElse(null);
     }
 }
