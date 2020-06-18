@@ -33,11 +33,8 @@ public class MealsUtil {
         return filterByPredicate(meals, caloriesPerDay, meal -> true);
     }
 
-//    public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalDateTime startTime, LocalDateTime endTime) {
-//        return filterByPredicate(meals, caloriesPerDay, meal -> DateTimeUtil.isBetweenHalfOpen(meal.getDateTime(), startTime, endTime));
-//    }
-    public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
-        return filterByPredicate(meals, caloriesPerDay, meal -> DateTimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalDate(), startDate, endDate) && DateTimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(),startTime,endTime));
+    public static List<MealTo> getFilteredTos(Collection<Meal> meals, int caloriesPerDay, LocalTime startTime, LocalTime endTime) {
+        return filterByPredicate(meals, caloriesPerDay, meal -> DateTimeUtil.isBetweenHalfOpen(meal.getTime(), startTime, endTime));
     }
 
     public static List<MealTo> filterByPredicate(Collection<Meal> meals, int caloriesPerDay, Predicate<Meal> filter) {
@@ -52,7 +49,6 @@ public class MealsUtil {
                 .map(meal -> createTo(meal, caloriesSumByDate.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
     }
-
 
 
     private static MealTo createTo(Meal meal, boolean excess) {

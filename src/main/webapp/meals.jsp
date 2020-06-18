@@ -35,10 +35,10 @@
                 <td><input type="hidden" name="action" value="filter"></td>
             </tr>
             <tr>
-                <td><input type="date" name="startDate"/></td>
-                <td><input type="date" name="endDate"/></td>
-                <td><input type="time" name="startTime"></td>
-                <td><input type="time" name="endTime"></td>
+                <td><input type="date" name="startDate" value="<c:out value="${param.startDate}"/>"/></td>
+                <td><input type="date" name="endDate" value="<c:out value="${param.endDate}"/>"/></td>
+                <td><input type="time" name="startTime" value="<c:out value="${param.startTime}"/>"/></td>
+                <td><input type="time" name="endTime" value="<c:out value="${param.endTime}"/>"/></td>
                 <td><input type="submit" value="Filter"/></td>
             </tr>
         </table>
