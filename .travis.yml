@@ -1,0 +1,13 @@
+language: java
+jdk: oraclejdk8
+# Improve build speed
+cache:
+  directories:
+    - $HOME/.m2
+# Notifications
+notifications:
+  email:
+    recipients:
+      - m.lependin@mail.ru
+      on_sucess: always
+      on_failure: always
