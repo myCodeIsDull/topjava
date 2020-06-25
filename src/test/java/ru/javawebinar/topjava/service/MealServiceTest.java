@@ -10,10 +10,13 @@ import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit4.SpringRunner;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalDate;
 
@@ -43,9 +46,19 @@ public class MealServiceTest {
     }
 
     @Test
+    public void getNotFound() {
+        assertThrows(NotFoundException.class,() -> service.get(NOT_FOUND,USER_ID));
+    }
+
+    @Test
     public void delete() {
         service.delete(MEAL_ID, USER_ID);
         assertNull(repository.get(MEAL_ID, USER_ID));
+    }
+
+    @Test
+    public void deleteNotFound() {
+        assertThrows(NotFoundException.class,() -> service.delete(NOT_FOUND,USER_ID));
     }
 
     @Test
@@ -61,10 +74,22 @@ public class MealServiceTest {
     }
 
     @Test
+    public void getAllEmptyList() {
+        List<Meal>all = service.getAll(NOT_FOUND);
+        assertMatch(all, Collections.emptyList());
+    }
+
+    @Test
     public void update() {
         Meal updated = getUpdated();
         service.update(updated, USER_ID);
         assertMatch(service.get(updated.getId(), USER_ID), updated);
+    }
+
+    @Test
+    public void updateNotFound() {
+        Meal updated = getUpdated();
+        assertThrows(NotFoundException.class,() -> service.update(updated,NOT_FOUND));
     }
 
     @Test
