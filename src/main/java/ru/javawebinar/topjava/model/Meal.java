@@ -1,19 +1,27 @@
 package ru.javawebinar.topjava.model;
 
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+@Entity
+@Table(name = "meals", uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "date_time"}, name = "meals_unique_user_datetime_idx"), @UniqueConstraint(columnNames = {"id"}, name = "meals_pkey")})
 public class Meal extends AbstractBaseEntity {
+    @NotNull
+    @Column(name = "date_time")
     private LocalDateTime dateTime;
 
+    @NotNull
     private String description;
 
+    @NotNull
     private int calories;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     public Meal() {
@@ -34,8 +42,10 @@ public class Meal extends AbstractBaseEntity {
         return dateTime;
     }
 
-    public String getDescription() { return description;
+    public String getDescription() {
+        return description;
     }
+
     public int getCalories() {
         return calories;
     }

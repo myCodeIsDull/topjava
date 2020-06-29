@@ -7,6 +7,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
@@ -14,9 +15,11 @@ import java.time.LocalDate;
 import java.time.Month;
 
 import static org.junit.Assert.assertThrows;
+import static ru.javawebinar.topjava.MealTestData.NOT_FOUND;
+import static ru.javawebinar.topjava.MealTestData.getNew;
+import static ru.javawebinar.topjava.MealTestData.getUpdated;
 import static ru.javawebinar.topjava.MealTestData.*;
-import static ru.javawebinar.topjava.UserTestData.ADMIN_ID;
-import static ru.javawebinar.topjava.UserTestData.USER_ID;
+import static ru.javawebinar.topjava.UserTestData.*;
 
 @ContextConfiguration({
         "classpath:spring/spring-app.xml",
@@ -30,6 +33,7 @@ public class MealServiceTest {
     private MealService service;
 
     @Test
+    @Transactional
     public void delete() throws Exception {
         service.delete(MEAL1_ID, USER_ID);
         assertThrows(NotFoundException.class, () -> service.get(MEAL1_ID, USER_ID));
@@ -46,19 +50,24 @@ public class MealServiceTest {
     }
 
     @Test
+    @Transactional
     public void create() throws Exception {
         Meal created = service.create(getNew(), USER_ID);
         int newId = created.id();
         Meal newMeal = getNew();
         newMeal.setId(newId);
+        newMeal.setUser(USER);
         MEAL_MATCHER.assertMatch(created, newMeal);
         MEAL_MATCHER.assertMatch(service.get(newId, USER_ID), newMeal);
     }
 
     @Test
+    @Transactional
     public void get() throws Exception {
         Meal actual = service.get(ADMIN_MEAL_ID, ADMIN_ID);
-        MEAL_MATCHER.assertMatch(actual, ADMIN_MEAL1);
+        Meal expected = ADMIN_MEAL1;
+        expected.setUser(actual.getUser());
+        MEAL_MATCHER.assertMatch(actual, expected);
     }
 
     @Test
@@ -72,10 +81,13 @@ public class MealServiceTest {
     }
 
     @Test
+    @Transactional
     public void update() throws Exception {
         Meal updated = getUpdated();
         service.update(updated, USER_ID);
-        MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), getUpdated());
+        Meal expected = getUpdated();
+        expected.setUser(USER);
+        MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID),expected);
     }
 
     @Test
