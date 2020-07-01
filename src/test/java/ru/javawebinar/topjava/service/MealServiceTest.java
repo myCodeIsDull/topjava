@@ -1,7 +1,13 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
@@ -13,6 +19,8 @@ import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.MealTestData.NOT_FOUND;
@@ -31,6 +39,26 @@ public class MealServiceTest {
 
     @Autowired
     private MealService service;
+
+    private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
+    private long startTime;
+    private static final Map<String, Long> METHOD_TO_EXECUTION_TIME = new HashMap<>();
+    @Rule
+    public final TestWatcher watcher = new TestWatcher() {
+        @Override
+        protected void starting(Description description) {
+            startTime = System.currentTimeMillis();
+        }
+
+        @Override
+        protected void finished(Description description) {
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            METHOD_TO_EXECUTION_TIME.put(description.getMethodName(), duration);
+            logger.info(description.getDisplayName() + " end's for " + duration + " ms");
+        }
+
+    };
 
     @Test
     @Transactional
@@ -87,7 +115,7 @@ public class MealServiceTest {
         service.update(updated, USER_ID);
         Meal expected = getUpdated();
         expected.setUser(USER);
-        MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID),expected);
+        MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), expected);
     }
 
     @Test
@@ -111,5 +139,10 @@ public class MealServiceTest {
     @Test
     public void getBetweenWithNullDates() throws Exception {
         MEAL_MATCHER.assertMatch(service.getBetweenInclusive(null, null, USER_ID), MEALS);
+    }
+
+    @AfterClass
+    public static void printExecutionTime() {
+        METHOD_TO_EXECUTION_TIME.forEach((key, value) -> System.out.println("Method: " + key + ", execution time: " + value + " ms"));
     }
 }
