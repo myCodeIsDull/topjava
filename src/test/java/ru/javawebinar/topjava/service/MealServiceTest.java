@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertThrows;
 import static ru.javawebinar.topjava.MealTestData.NOT_FOUND;
@@ -43,25 +44,30 @@ public class MealServiceTest {
     private static final Logger logger = LoggerFactory.getLogger(MealServiceTest.class);
     private long startTime;
     private static final Map<String, Long> METHOD_TO_EXECUTION_TIME = new HashMap<>();
+
+    @AfterClass
+    public static void printExecutionTime() {
+        METHOD_TO_EXECUTION_TIME.forEach((key, value) -> logger.debug("[{}] duration {} ms", key, TimeUnit.NANOSECONDS.toMillis(value)));
+    }
+
     @Rule
     public final TestWatcher watcher = new TestWatcher() {
         @Override
         protected void starting(Description description) {
-            startTime = System.currentTimeMillis();
+            startTime = System.nanoTime();
         }
 
         @Override
         protected void finished(Description description) {
-            long endTime = System.currentTimeMillis();
+            long endTime = System.nanoTime();
             long duration = endTime - startTime;
             METHOD_TO_EXECUTION_TIME.put(description.getMethodName(), duration);
-            logger.info(description.getDisplayName() + " end's for " + duration + " ms");
+            logger.info(description.getMethodName() + " end's for " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms");
         }
 
     };
 
     @Test
-    @Transactional
     public void delete() throws Exception {
         service.delete(MEAL1_ID, USER_ID);
         assertThrows(NotFoundException.class, () -> service.get(MEAL1_ID, USER_ID));
@@ -78,24 +84,19 @@ public class MealServiceTest {
     }
 
     @Test
-    @Transactional
     public void create() throws Exception {
         Meal created = service.create(getNew(), USER_ID);
         int newId = created.id();
         Meal newMeal = getNew();
         newMeal.setId(newId);
-        newMeal.setUser(USER);
         MEAL_MATCHER.assertMatch(created, newMeal);
         MEAL_MATCHER.assertMatch(service.get(newId, USER_ID), newMeal);
     }
 
     @Test
-    @Transactional
     public void get() throws Exception {
         Meal actual = service.get(ADMIN_MEAL_ID, ADMIN_ID);
-        Meal expected = ADMIN_MEAL1;
-        expected.setUser(actual.getUser());
-        MEAL_MATCHER.assertMatch(actual, expected);
+        MEAL_MATCHER.assertMatch(actual, ADMIN_MEAL1);
     }
 
     @Test
@@ -109,12 +110,10 @@ public class MealServiceTest {
     }
 
     @Test
-    @Transactional
     public void update() throws Exception {
         Meal updated = getUpdated();
         service.update(updated, USER_ID);
         Meal expected = getUpdated();
-        expected.setUser(USER);
         MEAL_MATCHER.assertMatch(service.get(MEAL1_ID, USER_ID), expected);
     }
 
@@ -139,10 +138,5 @@ public class MealServiceTest {
     @Test
     public void getBetweenWithNullDates() throws Exception {
         MEAL_MATCHER.assertMatch(service.getBetweenInclusive(null, null, USER_ID), MEALS);
-    }
-
-    @AfterClass
-    public static void printExecutionTime() {
-        METHOD_TO_EXECUTION_TIME.forEach((key, value) -> System.out.println("Method: " + key + ", execution time: " + value + " ms"));
     }
 }

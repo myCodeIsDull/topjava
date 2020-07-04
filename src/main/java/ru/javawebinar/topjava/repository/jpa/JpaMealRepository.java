@@ -1,5 +1,6 @@
 package ru.javawebinar.topjava.repository.jpa;
 
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Meal;
@@ -7,7 +8,6 @@ import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.MealRepository;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
@@ -28,7 +28,7 @@ public class JpaMealRepository implements MealRepository {
             meal.setUser(user);
             em.persist(meal);
         } else {
-            if (em.createQuery("update Meal m set m.dateTime=:dateTime, m.description=:description, m.calories=:calories where m.id=:id and m.user.id=:userId")
+            if (em.createNamedQuery(Meal.UPDATE)
                     .setParameter("dateTime", meal.getDateTime())
                     .setParameter("description", meal.getDescription())
                     .setParameter("calories", meal.getCalories())
@@ -44,40 +44,30 @@ public class JpaMealRepository implements MealRepository {
     @Override
     @Transactional
     public boolean delete(int id, int userId) {
-        int result;
-        try {
-            result = em.createQuery("delete from Meal m where m.id=:id and m.user.id=:userId")
-                    .setParameter("id", id)
-                    .setParameter("userId", userId).executeUpdate();
-        } catch (NoResultException e) {
-            return false;
-        }
-        return result != 0;
+        return em.createNamedQuery(Meal.DELETE)
+                .setParameter("id", id)
+                .setParameter("userId", userId).executeUpdate() !=0;
     }
 
     @Override
     public Meal get(int id, int userId) {
-        Meal result;
-        try {
-            result = (Meal) em.createQuery("select m from Meal as m where m.id=:id and m.user.id=:userId")
-                    .setParameter("id", id)
-                    .setParameter("userId", userId).getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
-        return result;
+        TypedQuery<Meal> query = em.createNamedQuery(Meal.GET, Meal.class)
+                .setParameter("id", id)
+                .setParameter("userId", userId);
+
+        return DataAccessUtils.singleResult(query.getResultList());
     }
 
     @Override
     public List<Meal> getAll(int userId) {
-        TypedQuery<Meal> query = em.createQuery("select m from Meal as m where m.user.id =:userId order by m.dateTime desc", Meal.class)
+        TypedQuery<Meal> query = em.createNamedQuery(Meal.GET_ALL, Meal.class)
                 .setParameter("userId", userId);
         return query.getResultList();
     }
 
     @Override
     public List<Meal> getBetweenHalfOpen(LocalDateTime startDateTime, LocalDateTime endDateTime, int userId) {
-        TypedQuery<Meal> query = em.createQuery("select m from Meal as m where m.user.id =:userId and (m.dateTime >= :startDateTime and m.dateTime < :endDateTime) order by m.dateTime desc ", Meal.class)
+        TypedQuery<Meal> query = em.createNamedQuery(Meal.FILTERED_BY_DATE, Meal.class)
                 .setParameter("userId", userId)
                 .setParameter("startDateTime", startDateTime)
                 .setParameter("endDateTime", endDateTime);
