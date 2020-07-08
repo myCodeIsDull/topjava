@@ -23,6 +23,11 @@ public class DataJpaUserRepository implements UserRepository {
     }
 
     @Override
+    public User getUserWithMeal(int userId) {
+        return crudRepository.namedGetWithMeals(userId);
+    }
+
+    @Override
     public boolean delete(int id) {
         return crudRepository.delete(id) != 0;
     }
