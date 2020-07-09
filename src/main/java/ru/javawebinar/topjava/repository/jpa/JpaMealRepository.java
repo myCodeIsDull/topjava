@@ -19,11 +19,6 @@ public class JpaMealRepository implements MealRepository {
     private EntityManager em;
 
     @Override
-    public Meal getWithUser(int id, int userId) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     @Transactional
     public Meal save(Meal meal, int userId) {
         meal.setUser(em.getReference(User.class, userId));

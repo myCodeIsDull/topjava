@@ -23,11 +23,6 @@ public abstract class JdbcMealRepository implements MealRepository {
 
     private final SimpleJdbcInsert insertMeal;
 
-    @Override
-    public Meal getWithUser(int id, int userId) {
-        throw new UnsupportedOperationException();
-    }
-
     public JdbcMealRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.insertMeal = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("meals")
@@ -37,7 +32,7 @@ public abstract class JdbcMealRepository implements MealRepository {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
 
-    abstract <T extends Comparable<?>> T getDateTime(LocalDateTime dateTime);
+    abstract <T> T getDateTime(LocalDateTime dateTime);
 
     @Override
     public Meal save(Meal meal, int userId) {
