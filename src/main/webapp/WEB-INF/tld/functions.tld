@@ -13,4 +13,16 @@
         <function-class>ru.javawebinar.topjava.util.DateTimeUtil</function-class>
         <function-signature>java.lang.String toString(java.time.LocalDateTime)</function-signature>
     </function>
+    
+    <function>
+        <name>substring</name>
+        <function-class>ru.javawebinar.topjava.util.Util</function-class>
+        <function-signature>java.lang.String substring(java.lang.String,int,int)</function-signature>
+    </function>
+
+    <function>
+        <name>length</name>
+        <function-class>ru.javawebinar.topjava.util.Util</function-class>
+        <function-signature>int length(java.lang.String)</function-signature>
+    </function>
 </taglib>

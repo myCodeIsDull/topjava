@@ -2,8 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://topjava.javawebinar.ru/functions" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <html>
 <head>
+<%--    https://stackoverflow.com/questions/14739350/the-function-must-be-used-with-a-prefix-when-a-default-namespace-is-not-specifie--%>
+    <c:set var="url">${pageContext.request.requestURL}</c:set>
+    <base href="${fn:substring(url, 0, fn:length(url) - fn:length(pageContext.request.requestURI))}${pageContext.request.contextPath}/" />
     <title>Meals</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -12,8 +16,8 @@
     <h3><a href="index.jsp">Home</a></h3>
     <hr/>
     <h2>Meals</h2>
-    <form method="get" action="meals">
-        <input type="hidden" name="action" value="filter">
+    <form method="get" action="meals/filter">
+<%--        <input type="hidden" name="action" value="filter">--%>
         <dl>
             <dt>From Date (inclusive):</dt>
             <dd><input type="date" name="startDate" value="${param.startDate}"></dd>
@@ -33,7 +37,8 @@
         <button type="submit">Filter</button>
     </form>
     <hr/>
-    <a href="meals?action=create">Add Meal</a>
+<%--    <a href="meals?action=create">Add Meal</a>--%>
+    <form:form action="meals?action=create" method="post"><input type="submit" value="Add Meal"></form:form>
     <br><br>
     <table border="1" cellpadding="8" cellspacing="0">
         <thead>
@@ -56,8 +61,14 @@
                 </td>
                 <td>${meal.description}</td>
                 <td>${meal.calories}</td>
-                <td><a href="meals?action=update&id=${meal.id}">Update</a></td>
-                <td><a href="meals?action=delete&id=${meal.id}">Delete</a></td>
+                <td>
+<%--                    <a href="meals?action=update&id=${meal.id}">Update</a>--%>
+                    <form:form action="meals?action=update&id=${meal.id}" method="post"><input type="submit" value="update"></form:form>
+                </td>
+<%--                <td><a href="meals?action=delete&id=${meal.id}">Delete</a></td>--%>
+                <td>
+                    <form:form action="meals/${meal.id}" method="delete"><input type="submit" value="delete"></form:form>
+                </td>
             </tr>
         </c:forEach>
     </table>
