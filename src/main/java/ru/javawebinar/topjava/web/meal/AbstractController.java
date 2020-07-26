@@ -19,9 +19,9 @@ import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public abstract class AbstractController {
-    private static final Logger logger  = LoggerFactory.getLogger(AbstractController.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractController.class);
 
-    private final MealService service;
+    protected final MealService service;
 
     public AbstractController(MealService service) {
         this.service = service;
@@ -31,6 +31,12 @@ public abstract class AbstractController {
         int userId = SecurityUtil.authUserId();
         logger.info("delete meal {} for user {}", id, userId);
         service.delete(id, userId);
+    }
+
+    public Meal get(int id) {
+        int userId = SecurityUtil.authUserId();
+        logger.info("get meal {} for user {}", id, userId);
+        return service.get(id, userId);
     }
 
     public List<MealTo> getAll() {
@@ -67,9 +73,6 @@ public abstract class AbstractController {
         List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
         return MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime);
     }
-
-
-
 
 
 }
