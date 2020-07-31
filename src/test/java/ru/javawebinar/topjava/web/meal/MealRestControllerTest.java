@@ -3,14 +3,12 @@ package ru.javawebinar.topjava.web.meal;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.javawebinar.topjava.MealTestData;
-import ru.javawebinar.topjava.TestMatcher;
 import ru.javawebinar.topjava.TestUtil;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
@@ -22,7 +20,6 @@ import ru.javawebinar.topjava.web.SecurityUtil;
 import ru.javawebinar.topjava.web.json.JsonUtil;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 import static ru.javawebinar.topjava.MealTestData.*;
 import static ru.javawebinar.topjava.util.MealsUtil.DEFAULT_CALORIES_PER_DAY;
@@ -31,8 +28,6 @@ public class MealRestControllerTest extends AbstractControllerTest {
 
     @Autowired
     private MealService mealService;
-
-    private static final TestMatcher<MealTo> MEAL_TO_MATCHER = TestMatcher.usingFieldsComparator(MealTo.class, "");
 
     private static final String REST_URL = MealRestController.REST_URL;
 
@@ -83,9 +78,10 @@ public class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void getBetween() throws Exception {
-        List<MealTo> expected = MealsUtil.getTos(List.of(MEAL3,MEAL2,MEAL1), DEFAULT_CALORIES_PER_DAY);
-        perform(MockMvcRequestBuilders.get(String.format("%s/filter?startDate=2020-01-30&endDate=2020-01-30&startTime=&endTime=",REST_URL)))
+        List<MealTo> expected = MealsUtil.getTos(List.of(MEAL2, MEAL1), DEFAULT_CALORIES_PER_DAY);
+        perform(MockMvcRequestBuilders.get(String.format("%s/filter?startDateTime=2020-01-30T10:00:00&endDateTime=2020-01-30T20:00:00", REST_URL)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(MEAL_TO_MATCHER.contentJson(expected));
     }

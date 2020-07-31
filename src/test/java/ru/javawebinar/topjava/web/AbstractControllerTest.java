@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import ru.javawebinar.topjava.AllActiveProfileResolver;
+import ru.javawebinar.topjava.TestMatcher;
+import ru.javawebinar.topjava.to.MealTo;
 
 import javax.annotation.PostConstruct;
 
@@ -24,6 +26,8 @@ import javax.annotation.PostConstruct;
 @Transactional
 @ActiveProfiles(resolver = AllActiveProfileResolver.class)
 abstract public class AbstractControllerTest {
+
+    protected static final TestMatcher<MealTo> MEAL_TO_MATCHER = TestMatcher.usingFieldsComparator(MealTo.class, "");
 
     private static final CharacterEncodingFilter CHARACTER_ENCODING_FILTER = new CharacterEncodingFilter();
 
