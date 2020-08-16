@@ -25,7 +25,12 @@ $(function () {
             "info": true,
             "columns": [
                 {
-                    "data": "dateTime"
+                    "data": "dateTime",
+                    "render": function (data, type, row) {
+                        if(type==="display") {
+                            return data.replace(/T/g," ");
+                        }
+                    }
                 },
                 {
                     "data": "description"
@@ -52,7 +57,7 @@ $(function () {
             ],
             "createdRow": function (row, data, dataIndex) {
                 if (!data.enabled) {
-                    $(row).attr("data-mealExcess", false);
+                    $(row).attr("data-mealExcess", data.excess);
                 }
             }
         }),

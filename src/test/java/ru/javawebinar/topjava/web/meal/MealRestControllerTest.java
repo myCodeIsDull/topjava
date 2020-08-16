@@ -34,7 +34,7 @@ class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void get() throws Exception {
-        perform(MockMvcRequestBuilders.get(REST_URL + MEAL1_ID))
+        perform(MockMvcRequestBuilders.get(REST_URL + MEAL1_ID).with(TestUtil.userAuth(USER)))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -42,8 +42,14 @@ class MealRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    void unAuth() throws Exception {
+        perform(MockMvcRequestBuilders.get(REST_URL))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void delete() throws Exception {
-        perform(MockMvcRequestBuilders.delete(REST_URL + MEAL1_ID))
+        perform(MockMvcRequestBuilders.delete(REST_URL + MEAL1_ID).with(TestUtil.userAuth(USER)))
                 .andExpect(status().isNoContent());
         assertThrows(NotFoundException.class, () -> mealService.get(MEAL1_ID, USER_ID));
     }
@@ -52,6 +58,7 @@ class MealRestControllerTest extends AbstractControllerTest {
     void update() throws Exception {
         Meal updated = getUpdated();
         perform(MockMvcRequestBuilders.put(REST_URL + MEAL1_ID).contentType(MediaType.APPLICATION_JSON)
+                .with(TestUtil.userAuth(USER))
                 .content(JsonUtil.writeValue(updated)))
                 .andExpect(status().isNoContent());
 
@@ -76,7 +83,7 @@ class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void getAll() throws Exception {
-        perform(MockMvcRequestBuilders.get(REST_URL))
+        perform(MockMvcRequestBuilders.get(REST_URL).with(TestUtil.userAuth(USER)))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -85,7 +92,7 @@ class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void filter() throws Exception {
-        perform(MockMvcRequestBuilders.get(REST_URL + "filter")
+        perform(MockMvcRequestBuilders.get(REST_URL + "filter").with(TestUtil.userAuth(USER))
                 .param("startDate", "2020-01-30").param("startTime", "07:00")
                 .param("endDate", "2020-01-31").param("endTime", "11:00"))
                 .andDo(print())
@@ -95,7 +102,7 @@ class MealRestControllerTest extends AbstractControllerTest {
 
     @Test
     void filterAll() throws Exception {
-        perform(MockMvcRequestBuilders.get(REST_URL + "filter?startDate=&endTime="))
+        perform(MockMvcRequestBuilders.get(REST_URL + "filter?startDate=&endTime=").with(TestUtil.userAuth(USER)))
                 .andExpect(status().isOk())
                 .andExpect(MEAL_TO_MATCHER.contentJson(getTos(MEALS, USER.getCaloriesPerDay())));
     }
