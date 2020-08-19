@@ -9,6 +9,8 @@ import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.to.UserTo;
 import ru.javawebinar.topjava.util.UserUtil;
+import ru.javawebinar.topjava.util.exception.ErrorInfo;
+import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
 import ru.javawebinar.topjava.web.json.JsonUtil;
 
@@ -66,6 +68,27 @@ class ProfileRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    void registerWithInvalidUser() throws Exception {
+        UserTo newTo = new UserTo(null, "", "", "", 0);
+        ErrorInfo errorInfo = new ErrorInfo(REST_URL + "/register", ErrorType.VALIDATION_ERROR, "");
+        perform(MockMvcRequestBuilders.post(REST_URL + "/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValue(newTo)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void registerExistingUser() throws Exception {
+        UserTo existingUser = UserUtil.asTo(USER);
+        existingUser.setName("somNewName");
+        perform(MockMvcRequestBuilders.post(REST_URL + "/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JsonUtil.writeValue(existingUser)))
+                .andDo(print())
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void update() throws Exception {
         UserTo updatedTo = new UserTo(null, "newName", "newemail@ya.ru", "newPassword", 1500);
         perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
@@ -75,6 +98,15 @@ class ProfileRestControllerTest extends AbstractControllerTest {
                 .andExpect(status().isNoContent());
 
         USER_MATCHER.assertMatch(userService.get(USER_ID), UserUtil.updateFromTo(new User(USER), updatedTo));
+    }
+
+    @Test
+    void updateWithInvalidUser() throws Exception {
+        UserTo updatedTo = new UserTo(null, "", "", "", 0);
+        perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(USER))
+                .content(JsonUtil.writeValue(updatedTo)))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
