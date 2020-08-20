@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import ru.javawebinar.topjava.AllActiveProfileResolver;
@@ -25,7 +26,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 })
 //@WebAppConfiguration
 //@ExtendWith(SpringExtension.class)
-//@Transactional
+@Transactional
 @ActiveProfiles(resolver = AllActiveProfileResolver.class)
 abstract public class AbstractControllerTest {
 

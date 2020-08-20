@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.to.UserTo;
 import ru.javawebinar.topjava.util.UserUtil;
-import ru.javawebinar.topjava.util.exception.ErrorInfo;
-import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
 import ru.javawebinar.topjava.web.json.JsonUtil;
 
@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static ru.javawebinar.topjava.TestUtil.readFromJson;
 import static ru.javawebinar.topjava.TestUtil.userHttpBasic;
 import static ru.javawebinar.topjava.UserTestData.*;
+import static ru.javawebinar.topjava.web.ErrorInfoTestData.*;
 import static ru.javawebinar.topjava.web.user.ProfileRestController.REST_URL;
 
 class ProfileRestControllerTest extends AbstractControllerTest {
@@ -70,14 +71,15 @@ class ProfileRestControllerTest extends AbstractControllerTest {
     @Test
     void registerWithInvalidUser() throws Exception {
         UserTo newTo = new UserTo(null, "", "", "", 0);
-        ErrorInfo errorInfo = new ErrorInfo(REST_URL + "/register", ErrorType.VALIDATION_ERROR, "");
         perform(MockMvcRequestBuilders.post(REST_URL + "/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValue(newTo)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(PROFILE_REST_CONTROLLER_REGISTRATION_VALIDATION_ERROR));
     }
 
     @Test
+    @Transactional(propagation = Propagation.NEVER)
     void registerExistingUser() throws Exception {
         UserTo existingUser = UserUtil.asTo(USER);
         existingUser.setName("somNewName");
@@ -85,7 +87,8 @@ class ProfileRestControllerTest extends AbstractControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValue(existingUser)))
                 .andDo(print())
-                .andExpect(status().isConflict());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(PROFILE_REST_CONTROLLER_REGISTRATION_VALIDATION_ERROR));
     }
 
     @Test
@@ -106,7 +109,21 @@ class ProfileRestControllerTest extends AbstractControllerTest {
         perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(USER))
                 .content(JsonUtil.writeValue(updatedTo)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(PROFILE_REST_CONTROLLER_UPDATING_VALIDATION_ERROR));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NEVER)
+    void updateWithExistingUser() throws Exception {
+        UserTo updatedTo = UserUtil.asTo(ADMIN);
+        updatedTo.setId(USER_ID);
+        updatedTo.setPassword("admin@gmail.com");
+        perform(MockMvcRequestBuilders.put(REST_URL).contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(USER))
+                .content(JsonUtil.writeValue(updatedTo)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(PROFILE_REST_CONTROLLER_UPDATING_VALIDATION_ERROR));
     }
 
     @Test

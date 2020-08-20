@@ -35,13 +35,13 @@ public class ExceptionInfoHandler {
     @ResponseStatus(value = HttpStatus.UNPROCESSABLE_ENTITY)
     @ExceptionHandler(NotFoundException.class)
     public ErrorInfo handleError(HttpServletRequest req, NotFoundException e) {
-        return logAndGetErrorInfo(req, e, false, DATA_NOT_FOUND, Throwable::toString);
+        return logAndGetErrorInfo(req, e, false, DATA_NOT_FOUND, Throwable::getMessage);
     }
 
     @ResponseStatus(value = HttpStatus.CONFLICT)  // 409
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ErrorInfo conflict(HttpServletRequest req, DataIntegrityViolationException e) {
-        return logAndGetErrorInfo(req, e, true, DATA_ERROR, throwable -> "User with this email already exists");
+        return logAndGetErrorInfo(req, e, true, DATA_ERROR, Throwable::getMessage);
     }
 
     @ResponseStatus(value = HttpStatus.UNPROCESSABLE_ENTITY)  // 422
@@ -52,20 +52,19 @@ public class ExceptionInfoHandler {
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public ErrorInfo handleError(HttpServletRequest req, Exception e) {
+    public ErrorInfo
+    handleError(HttpServletRequest req, Exception e) {
         return logAndGetErrorInfo(req, e, true, APP_ERROR, Throwable::toString);
     }
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    @ExceptionHandler(BindException.class)
-    public ErrorInfo bindExceptionHandler(HttpServletRequest req, BindException e) {
-        return logAndGetErrorInfo(req, e, false, VALIDATION_ERROR, throwable -> ValidationUtil.getErrorResponse(e.getBindingResult()).getBody());
-    }
-
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorInfo bindExceptionHandler(HttpServletRequest req, MethodArgumentNotValidException e) {
-        return logAndGetErrorInfo(req, e, false, VALIDATION_ERROR, throwable -> ValidationUtil.getErrorResponse(e.getBindingResult()).getBody());
+    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class})
+    public ErrorInfo bindExceptionHandler(HttpServletRequest req, Exception e) {
+        return logAndGetErrorInfo(req, e, false, VALIDATION_ERROR, throwable -> {
+            if (e instanceof BindException) {
+                return ValidationUtil.getMessage(((BindException) e).getBindingResult());
+            } else return ValidationUtil.getMessage(((MethodArgumentNotValidException) e).getBindingResult());
+        });
     }
 
 

@@ -24,6 +24,7 @@ import static ru.javawebinar.topjava.UserTestData.USER;
 import static ru.javawebinar.topjava.UserTestData.USER_ID;
 import static ru.javawebinar.topjava.util.MealsUtil.createTo;
 import static ru.javawebinar.topjava.util.MealsUtil.getTos;
+import static ru.javawebinar.topjava.web.ErrorInfoTestData.*;
 
 class MealRestControllerTest extends AbstractControllerTest {
 
@@ -88,7 +89,8 @@ class MealRestControllerTest extends AbstractControllerTest {
         perform(MockMvcRequestBuilders.put(REST_URL + MEAL1_ID).contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValue(invalidMeal))
                 .with(userHttpBasic(USER)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(MEALS_REST_CONTROLLER_UPDATING_VALIDATION_ERROR));
     }
 
     @Test
@@ -113,7 +115,8 @@ class MealRestControllerTest extends AbstractControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtil.writeValue(invalidMeal))
                 .with(userHttpBasic(USER)))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(MEALS_REST_CONTROLLER_CREATE_VALIDATION_ERROR));
     }
 
     @Test

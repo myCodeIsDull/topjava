@@ -23,12 +23,6 @@ public class GlobalExceptionHandler {
         Throwable rootCause = ValidationUtil.getRootCause(e);
         String message = rootCause.toString();
         HttpStatus httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        if (rootCause instanceof org.postgresql.util.PSQLException) {
-            if (((PSQLException) rootCause).getSQLState().equals("23505")) {//https://www.sqlerror.de/db2_sql_error_-803_sqlstate_23505.html
-                message = "User with this email already exists";
-                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY;
-            }
-        }
         ModelAndView mav = new ModelAndView("exception",
                 Map.of("exception", rootCause, "message", message, "status", httpStatus));
         mav.setStatus(httpStatus);

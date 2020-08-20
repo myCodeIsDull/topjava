@@ -5,13 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import ru.javawebinar.topjava.TestMatcher;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.service.UserService;
 import ru.javawebinar.topjava.util.UserUtil;
-import ru.javawebinar.topjava.util.exception.ErrorInfo;
-import ru.javawebinar.topjava.util.exception.ErrorType;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
 import ru.javawebinar.topjava.web.json.JsonUtil;
@@ -24,11 +23,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static ru.javawebinar.topjava.TestUtil.readFromJson;
 import static ru.javawebinar.topjava.TestUtil.userHttpBasic;
 import static ru.javawebinar.topjava.UserTestData.*;
+import static ru.javawebinar.topjava.web.ErrorInfoTestData.*;
 
 class AdminRestControllerTest extends AbstractControllerTest {
 
     private static final String REST_URL = AdminRestController.REST_URL + '/';
-    private static final TestMatcher<ErrorInfo> ERROR_INFO_MATCHER = TestMatcher.usingFieldsWithIgnoringAssertions(ErrorInfo.class, "detail");
 
     @Autowired
     private UserService userService;
@@ -98,7 +97,7 @@ class AdminRestControllerTest extends AbstractControllerTest {
         perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(ADMIN))
-                .content(JsonUtil.writeValue(updated)))
+                .content(UserTestData.jsonWithPassword(updated,"newPassword")))
                 .andExpect(status().isNoContent());
 
         USER_MATCHER.assertMatch(userService.get(USER_ID), updated);
@@ -108,13 +107,25 @@ class AdminRestControllerTest extends AbstractControllerTest {
     void updateWithInvalidUser() throws Exception {
         User updated = getUpdated();
         updated.setName("");
-        ErrorInfo errorInfo = new ErrorInfo("http://localhost/rest/admin/users/100000", ErrorType.VALIDATION_ERROR, "");
         perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(ADMIN))
                 .content(JsonUtil.writeValue(updated)))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(ERROR_INFO_MATCHER.contentJson(errorInfo));
+                .andExpect(ERROR_INFO_MATCHER.contentJson(ADMIN_REST_CONTROLLER_UPDATING_VALIDATION_ERROR));
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NEVER)
+    void updateWithExistingUser() throws Exception {
+        User updated = getUpdated();
+        updated.setEmail("admin@gmail.com");
+        perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(ADMIN))
+                .content(UserTestData.jsonWithPassword(updated,"someNewPass")))
+                .andExpect(status().isConflict())
+                .andExpect(ERROR_INFO_MATCHER.contentJson(ADMIN_REST_CONTROLLER_UPDATE_WITH_EXISTING_MAIL_DATA_ERROR));
     }
 
     @Test
@@ -136,23 +147,22 @@ class AdminRestControllerTest extends AbstractControllerTest {
     @Test
     void createUserNotValid() throws Exception {
         User invalidUser = new User();
-        ErrorInfo errorInfo = new ErrorInfo("http://localhost/rest/admin/users/", ErrorType.VALIDATION_ERROR, "");
         perform(MockMvcRequestBuilders.post(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(ADMIN))
                 .content(UserTestData.jsonWithPassword(invalidUser, "")))
-                .andExpect(status().isUnprocessableEntity()).andExpect(ERROR_INFO_MATCHER.contentJson(errorInfo));
+                .andExpect(status().isUnprocessableEntity()).andExpect(ERROR_INFO_MATCHER.contentJson(ADMIN_REST_CONTROLLER_CREATE_VALIDATION_ERROR));
     }
 
     @Test
+    @Transactional(propagation = Propagation.NEVER)
     void createUserWithExistingEmail() throws Exception {
-        ErrorInfo errorInfo = new ErrorInfo("http://localhost/rest/admin/users/", ErrorType.DATA_ERROR, "");
         User existingUser = UserUtil.createNewFromTo(UserUtil.asTo(USER));
         perform(MockMvcRequestBuilders.post(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(userHttpBasic(ADMIN))
                 .content(UserTestData.jsonWithPassword(existingUser,"somepassw")))
-                .andExpect(status().isConflict()).andExpect(ERROR_INFO_MATCHER.contentJson(errorInfo));
+                .andExpect(status().isConflict()).andExpect(ERROR_INFO_MATCHER.contentJson(ADMIN_REST_CONTROLLER_CREATE_EXISTING_USER_DATA_ERROR));
     }
 
     @Test
